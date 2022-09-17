@@ -15,6 +15,8 @@ FAVORIT_TEAMS = []
 # EXCLUSIVE TEAMS
 EXCLUSIVE_TEAMS = []
 
+OUTPUT_COLUMNS = ['id', 'element_type_name', 'name', 'expected_points', 'now_cost']
+
 def get_current_team(id: int, event: int):
     """現在のチーム選手を取得する
     Args:
@@ -30,7 +32,14 @@ def get_current_team(id: int, event: int):
 def get_least_elements_stas():
     return pd.read_csv('data/current_data.csv')
 
+def current_team(team_id, event):
+    master = get_least_elements_stas()
+    current = get_current_team(team_id, event)
+    current = master.merge(current, left_on='id', right_on='element')
+    return {'current': current[OUTPUT_COLUMNS].to_dict(orient='records')}
+
 def optimize(current: pd.DataFrame, master: pd.DataFrame, replacement: int=1):
+    print(replacement)
     fun = lambda x: pulp.LpVariable(f'{x.id}_{x.element_type_name}_{x.team_name}', cat='Binary')
     master['variables'] = list(master.apply(fun, axis=1))
     prob = pulp.LpProblem('fpl_planner', sense = pulp.LpMaximize)
@@ -69,8 +78,12 @@ def optimize(current: pd.DataFrame, master: pd.DataFrame, replacement: int=1):
     current = master.merge(current, left_on='id', right_on='element')
     in_elements = expected[~expected['id'].isin(current.element.values)]
     out_elements = current[~current['element'].isin(expected.id.values)]
-    columns = ['id', 'element_type_name', 'name', 'expected_points', 'now_cost']
-    return {'expected_points': expected_points, 'out_elements': out_elements[columns].to_dict(orient='records'), 'in_elements': in_elements[columns].to_dict(orient='records')}
+    return {
+        'expected_points': expected_points,
+        'out_elements': out_elements[OUTPUT_COLUMNS].to_dict(orient='records'),
+        'in_elements': in_elements[OUTPUT_COLUMNS].to_dict(orient='records'),
+        'current': current[OUTPUT_COLUMNS].to_dict(orient='records')
+    }
 
 def main(team_id, event, replacement=1):
     current = get_current_team(team_id, event)
@@ -79,4 +92,5 @@ def main(team_id, event, replacement=1):
 
 if __name__ == "__main__":
     res = main(team_id=2555500, event=5, replacement=3)
+    res = current_team(team_id=2555500, event=5)
     print(res)
