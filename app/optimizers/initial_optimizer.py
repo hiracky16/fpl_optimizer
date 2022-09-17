@@ -1,19 +1,11 @@
-import pandas as pd
-import pulp, logging, json
-
-# const
-# Position name
-POSITIONS = ['GKP', 'DEF', 'MID', 'FWD']
-# Limit on the number of players by position
-PLAYER_LIMIT_BY_POSITIONS = {'GKP': 2, 'DEF': 5, 'MID': 5, 'FWD': 3}
-# Limit on the number of players
-TOTAL_PLAYERS = sum([p for p in PLAYER_LIMIT_BY_POSITIONS.values()])
-# Limit on the number of players on the same team
-SAME_TEAM_LIMIT = 3
-# Limit on cost
-COST_LIMIT = 970
-# favorit team （default: none）
-# FAVORIT_TEAM = 'Man Utd'
+import pandas as pd, pulp, logging, json
+from .const import (
+    POSITIONS,
+    PLAYER_LIMIT_BY_POSITIONS,
+    TOTAL_PLAYERS,
+    SAME_TEAM_LIMIT,
+    COST_LIMIT
+)
 FAVORIT_TEAMS = ['Man Utd']
 # EXCLUSIVE TEAMS
 EXCLUSIVE_TEAMS = ['West Ham']
@@ -77,4 +69,5 @@ def main():
     return selected_elements(data)
 
 if __name__ == "__main__":
-    main()
+    res = main()
+    print(res)
