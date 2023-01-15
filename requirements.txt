@@ -2,3 +2,5 @@ pandas
 pulp
 Flask
 requests
+fsspec
+gcsfs

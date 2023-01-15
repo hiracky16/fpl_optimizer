@@ -7,6 +7,7 @@ from .const import (
     TOTAL_PLAYERS,
     COST_LIMIT
 )
+from .repository import Repository
 
 # 交代選手数
 REPLACEMENT = 3
@@ -30,7 +31,8 @@ def get_current_team(id: int, event: int):
     return pd.json_normalize(elements)
 
 def get_least_elements_stas():
-    return pd.read_csv('data/current_data.csv')
+    repository = Repository()
+    return repository.read_expected_elements()
 
 def current_team(team_id, event):
     master = get_least_elements_stas()
@@ -92,5 +94,5 @@ def main(team_id, event, replacement=1):
 
 if __name__ == "__main__":
     res = main(team_id=2555500, event=5, replacement=3)
-    res = current_team(team_id=2555500, event=5)
+    # res = current_team(team_id=2555500, event=5)
     print(res)

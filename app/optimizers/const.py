@@ -1,3 +1,5 @@
+import os
+
 # const
 # Position name
 POSITIONS = ['GKP', 'DEF', 'MID', 'FWD']
@@ -9,3 +11,7 @@ TOTAL_PLAYERS = sum([p for p in PLAYER_LIMIT_BY_POSITIONS.values()])
 SAME_TEAM_LIMIT = 3
 # Limit on cost
 COST_LIMIT = 1000
+
+# 環境変数
+IS_GCS = os.environ.get('IS_GCS') == 'TRUE'
+DATAMART_BUCKET = os.environ.get('DATAMART_BUCKET')

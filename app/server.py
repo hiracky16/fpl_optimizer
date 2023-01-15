@@ -1,7 +1,8 @@
 from flask import Flask, Response, request
 from optimizers.initial_optimizer import main as initial_optimizer
 from optimizers.optmizer import main as optimize_team, current_team
-import json
+from optimizers.repository import Repository
+import json, logging
 app = Flask(__name__)
 
 ERROR_RESPONSE_BODY = {'message': 'cannot optimize!'}
@@ -32,8 +33,17 @@ def optimize():
         event = req.get("event")
         replacement = req.get("replacement") if req.get("replacement") else 1
         return optimize_team(team_id, event, int(replacement))
-    except:
+    except Exception as e:
+        logging.error(e)
+        return ERROR_RESPONSE_BODY, 500
+
+@app.route("/event")
+def event():
+    try:
+        return Repository().read_current_next_event().to_dict(orient='records')[0]
+    except Exception as e:
+        logging.error(e)
         return ERROR_RESPONSE_BODY, 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5555, debug=True)
