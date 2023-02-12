@@ -5,7 +5,8 @@ from .const import (
     PLAYER_LIMIT_BY_POSITIONS,
     SAME_TEAM_LIMIT,
     TOTAL_PLAYERS,
-    COST_LIMIT
+    COST_LIMIT,
+    STARTING_TOTAL_PLAYERS
 )
 from .repository import Repository
 
@@ -80,11 +81,33 @@ def optimize(current: pd.DataFrame, master: pd.DataFrame, replacement: int=1):
     current = master.merge(current, left_on='id', right_on='element')
     in_elements = expected[~expected['id'].isin(current.element.values)]
     out_elements = current[~current['element'].isin(expected.id.values)]
+
+    # スターティングイレブン
+    expected.drop('variables', inplace=True, axis=1)
+    expected['variables'] = list(expected.apply(fun, axis=1))
+    prob = pulp.LpProblem('fpl_starting_planner', sense = pulp.LpMaximize)
+    # ポジションごとの人数の制約
+    for p in expected.element_type_name.unique():
+        dt = expected[expected.element_type_name == p]
+        prob += pulp.lpSum(dt.variables) <= PLAYER_LIMIT_BY_POSITIONS[p]
+        prob += pulp.lpSum(dt.variables) >= 1
+
+    # 全体の選手数の制限
+    prob += pulp.lpSum(expected.variables) == STARTING_TOTAL_PLAYERS
+    # 目的関数
+    prob += pulp.lpDot(expected.expected_points, expected.variables)
+
+    status = prob.solve()
+    expected_points = prob.objective.value()
+    expected['flag'] = expected.apply(lambda x: x.variables.value(), axis=1)
+    expected_start = expected[expected.flag == 1].sort_values('element_type_name')
+
     return {
         'expected_points': expected_points,
         'out_elements': out_elements[OUTPUT_COLUMNS].to_dict(orient='records'),
         'in_elements': in_elements[OUTPUT_COLUMNS].to_dict(orient='records'),
-        'current': current[OUTPUT_COLUMNS].to_dict(orient='records')
+        'current': current[OUTPUT_COLUMNS].to_dict(orient='records'),
+        'start': expected_start[OUTPUT_COLUMNS].to_dict(orient='records'),
     }
 
 def main(team_id, event, replacement=1):
